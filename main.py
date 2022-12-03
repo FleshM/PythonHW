@@ -4,6 +4,7 @@ import vacancies
 
 class Program:
     def __init__(self):
+        print('Добро пожаловать!')
         self.type = input('Выберите программу (Вакансии/Статистика): ')
         if self.type == 'Вакансии':
             self.inputConnect = vacancies.InputConnect()
