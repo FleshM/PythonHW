@@ -8,6 +8,19 @@ import numpy as np
 
 
 class Vacancy:
+    """Класс для представления вакансии.
+
+    Attributes:
+        name (str): Название вакансии
+        salary_from (str): Нижняя граница вилки оклада
+        salary_to (str): Верхняя граница вилки оклада
+        salary_currency (str): Валюта
+        area_name (str): Город
+        published_at (str): Дата и время публикации
+        year (int): Год публикации вакансии
+        salary (float): Средняя зарплата в рублях
+        currency_to_rub (dict[str, float]): Словарь с валютами для превода зарплаты в рубли
+    """
     currency_to_rub = {
         "AZN": 35.68,
         "BYR": 23.91,
@@ -22,6 +35,13 @@ class Vacancy:
     }
 
     def __init__(self, vac, name):
+        """Инициализирует объект Vacancy, вычисляет среднюю зарплату и распределяет данные вакансии по словарям
+        датасета, для дальнейшего сбора статистики.
+
+        Args:
+            vac (dict[str, str]): Вакансия в виде словаря
+            name (str): Название профессии, которую нужно учитывать в статистике
+        """
         self.name = vac['name']
         self.salary_from = vac['salary_from']
         self.salary_to = vac['salary_to']
@@ -64,6 +84,18 @@ class Vacancy:
 
 
 class DataSet:
+    """Класс для представления датасета.
+
+    Attributes:
+        file_name (str): Название файла
+        p_name (str): : Название профессии, которую нужно учитывать в статистике
+        salary_by_year (dict[int, float]): Динамика уровня зарплат по годам
+        vacancies_by_year (dict[int, int]): Динамика количества вакансий по годам
+        p_name_salary_by_year (dict[int, float]): Динамика уровня зарплат по годам для выбранной профессии
+        p_name_vacancies_by_year (dict[int, int]): Динамика количества вакансий по годам для выбранной профессии
+        salary_by_city (dict[str, float]): Уровень зарплат по городам (в порядке убывания) - только первые 10 значений
+        vacancies_by_city (dict[str, float]): Доля вакансий по городам (в порядке убывания) - только первые 10 значений
+    """
     salary_by_year = {}
     vacancies_by_year = {}
     p_name_salary_by_year = {}
@@ -72,10 +104,19 @@ class DataSet:
     vacancies_by_city = {}
 
     def __init__(self, file_name, p_name):
+        """Инициализирует датасет.
+
+        Args:
+            file_name (str): Название файла
+            p_name (str): Название профессии, которую нужно учитывать в статистике
+        """
         self.file_name = file_name
         self.p_name = p_name
 
     def print_data(self):
+        """Печатает всю статистику в консоль.
+
+        """
         print(f'Динамика уровня зарплат по годам: {self.salary_by_year}')
         print(f'Динамика количества вакансий по годам: {self.vacancies_by_year}')
         print(f'Динамика уровня зарплат по годам для выбранной профессии: {self.p_name_salary_by_year}')
@@ -84,6 +125,12 @@ class DataSet:
         print(f'Доля вакансий по городам (в порядке убывания): {self.vacancies_by_city}')
 
     def get_data(self, data_vacancies):
+        """Вычисляет всю статистику. Преобразует словари в объекты Vacancy, далее вычисляет динамику по годам и городам, а затем
+        форматирует данные.
+
+        Args:
+            data_vacancies (list[dict]): Список вакансий, в виде словарей
+        """
         for vac in data_vacancies:
             Vacancy(vac, self.p_name)
 
@@ -118,6 +165,15 @@ class DataSet:
         self.vacancies_by_city = dict(list(self.vacancies_by_city.items())[:10])
 
     def csv_filter(self, reader, list_naming):
+        """Форматирует данные полученные после чтения csv файла и возвращает результат.
+
+        Args:
+           reader (list): Данные полученные после чтения csv файла
+           list_naming (list[str]): Список с ключами для создания словаря
+
+        Returns:
+           list[dict]: Список словарей
+        """
         result = []
         for row in reader:
             is_correct = True
@@ -131,6 +187,11 @@ class DataSet:
         return result
 
     def read_csv(self):
+        """Читает csv файл и возвращает отформатированные данные.
+
+        Returns:
+            list[dict]: Список словарей
+        """
         head, result = [], []
         if os.stat(self.file_name).st_size == 0:
             print('Пустой файл')
@@ -151,7 +212,17 @@ class DataSet:
 
 
 class Report:
+    """Класс для представления отчета и запуска программы.
+
+    Attributes:
+        file (str): Название файла
+        name (str): : Название профессии, которую нужно учитывать в статистике
+        data (DataSet): Датасет, в котором вычисляется и хранится статистика
+    """
     def __init__(self):
+        """Инициализирует отчет. Создает датасет, который вычисляет статистику и выводит ее в консоль.
+
+        """
         self.file = input('Введите название файла: ')
         self.name = input('Введите название профессии: ')
 
@@ -160,6 +231,10 @@ class Report:
         self.data.print_data()
 
     def generate_image(self):
+        """Генерирует изображение с визуализацией полученной статистики.
+        Использует pandas и numpy для отрисовки диаграмм.
+
+        """
         labels = self.data.salary_by_year.keys()
         x = np.arange(len(labels))
         width = 0.35
@@ -211,6 +286,9 @@ class Report:
         plt.savefig('graph.png', dpi=300)
 
     def generate_excel(self):
+        """Генерирует excel файл с полученной статистикой. Использует openpyxl для работы с MC Excel.
+
+        """
         wb = openpyxl.Workbook()
         ws_years = wb.worksheets[0]
         ws_years.title = "Статистика по годам"
@@ -239,6 +317,11 @@ class Report:
 
     @staticmethod
     def format_excel_data(ws):
+        """Форматирует данные и задает таблицам внешний вид в excel файле.
+
+        Args:
+           ws: Excel лист, который необходимо отформатировать
+        """
         thin = Side(border_style="thin", color="000000")
         dims = {}
         is_title = True

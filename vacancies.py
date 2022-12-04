@@ -6,16 +6,44 @@ import re
 
 
 def remove_html(string):
+    """Очищает строку от html тегов.
+
+    Args:
+        string (str): Исходная строка
+
+    Returns:
+        str: Строка без html тегов
+    """
     result = re.sub(r'<.*?>', '', string)
     result = re.sub(r'\s+', ' ', result)
     return result.strip()
 
 
-def shortener(val):
-    return val if len(val) <= 100 else val[:100] + '...'
+def shortener(string):
+    """Обрезает исходную строку до 100 символов.
+
+    Args:
+        string (str): Исходная строка
+
+    Returns:
+        str: Строка (до 100 символов)
+    """
+    return string if len(string) <= 100 else string[:100] + '...'
 
 
 class Salary:
+    """Класс для представления зарплаты.
+
+    Attributes:
+        salary_from (int): Нижняя граница вилки оклада
+        salary_to (int): Верхняя граница вилки оклада
+        salary_gross (str): Вычет налогов
+        salary_currency (str): Валюта
+        salary (str): Оклад
+        currencies (dict[str, str]): Словарь с валютами
+        currency_to_rub (dict[str, float]): Словарь с валютами для превода зарплаты в рубли
+        salary_gross_dict (dict[str, str]): Словарь типов вычета налогов для перевода с английского на русский
+    """
     currencies = {
         'AZN': 'Манаты',
         'BYR': 'Белорусские рубли',
@@ -48,6 +76,11 @@ class Salary:
     }
 
     def __init__(self, vac):
+        """Инициализирует объект Salary, выполянет конвертацию для целочисленных полей, форматирует оклад.
+
+        Args:
+            vac (dict): Вакансия в виде словаря
+        """
         self.salary_from = int(float(vac['salary_from']))
         self.salary_to = int(float(vac['salary_to']))
         self.salary_gross = vac['salary_gross']
@@ -55,15 +88,42 @@ class Salary:
         self.salary = self.get_salary()
 
     def get_average(self):
+        """Вычисляет среднюю зарплату и переводит ее в рубли, с помощью словаря currency_to_rub.
+
+        Returns:
+            float: Средняя зарплата в рублях
+        """
         return (float(self.salary_from) + float(self.salary_to)) / 2 * self.currency_to_rub[self.salary_currency]
 
     def get_salary(self):
+        """Возвращает отформатированную строку оклада, используя зарплатную вилку, валюту и gross.
+
+        Returns:
+            str: Оклад
+        """
         return '{0:,} - {1:,} ({2}) ({3})'.format(self.salary_from, self.salary_to,
                                                   Salary.currencies[self.salary_currency],
                                                   self.salary_gross_dict[self.salary_gross]).replace(',', ' ')
 
 
 class Vacancy:
+    """Класс для представления вакансии.
+
+    Attributes:
+        name (str): Название вакансии
+        description (str): Описание вакансии (до 100 символов)
+        skills (list[str]): Список всех навыков
+        key_skills (str): Навыки (до 100 символов)
+        experience_id (str): Опыт работы
+        premium (str): Премиум-вакансия
+        employer_name (str): Название компании
+        salary (Salary): Зарплата
+        area_name (str): Город
+        date (str): Отформатированная дата публикации
+        published_at (str): Дата и время публикации
+        bools (dict[str, str]): Словарь булевых перменных для перевода с английского на русский
+        job_exp (dict[str, str]): Словарь типов опыта работы для перевода с английского на русский
+    """
     bools = {
         'True': 'Да',
         'False': 'Нет',
@@ -78,6 +138,11 @@ class Vacancy:
     }
 
     def __init__(self, vac):
+        """Инициализирует объект Vacancy и валидирует данные.
+
+        Args:
+            vac (dict): Вакансия в виде словаря
+        """
         self.name = remove_html(vac['name'])
         self.description = shortener(remove_html(vac['description']))
         self.skills = vac['key_skills'].split('\n')
@@ -92,15 +157,40 @@ class Vacancy:
 
 
 class DataSet:
+    """Класс для представления датасета.
+
+    Attributes:
+        file_name (str): Название файла
+        vacancies_objects (list[Vacancy]): Cписок всех вакансий
+    """
     def __init__(self, file_name):
+        """Инициализирует объект DataSet.
+
+        Args:
+            file_name (str): Название файла, откуда нужно получить данные
+        """
         self.file_name = file_name
         self.vacancies_objects = []
 
     def get_data(self, data_vacancies):
+        """Заполняет список всех вакансий (vacancies_objects) объектами Vacancy.
+
+        Args:
+            data_vacancies (list[dict]): Список со всеми вакансиями в виде словарей
+        """
         for vac in data_vacancies:
             self.vacancies_objects.append(Vacancy(vac))
 
     def csv_filter(self, reader, list_naming):
+        """Форматирует данные полученные после чтения csv файла и возвращает результат.
+
+        Args:
+            reader (list): Данные полученные после чтения csv файла
+            list_naming (list[str]): Список с ключами для создания словаря
+
+        Returns:
+            list[dict]: Список словарей
+        """
         result = []
         for row in reader:
             is_correct = True
@@ -114,6 +204,11 @@ class DataSet:
         return result
 
     def read_csv(self):
+        """Читает csv файл и возвращает отформатированные данные.
+
+        Returns:
+            list[dict]: Список словарей
+        """
         head, result = [], []
         if os.stat(self.file_name).st_size == 0:
             print('Пустой файл')
@@ -134,6 +229,22 @@ class DataSet:
 
 
 class InputConnect:
+    """Класс для валидации введенных данных и запуска программы.
+
+    Attributes:
+        file (str): Название файла
+        _filter (bool or list[str]): Параметр фильтрации (True, если параметр не введен)
+        _sort (bool or str): Параметр сортировки (True, если параметр не введен)
+        is_reverse (bool): Обратный порядок сортировки
+        segment (list[int]): Диапазон вывода
+        fields (list[str] or str): Требуемые столбцы
+        header (list[str]): Список заголовков
+        keys_dict (list[str]): Список ключей в словаре
+        experience_weight (dict[str, int]): Вес в зависимости от опыта работы
+        rus_dict (dict[str, str]): Словарь для перевода ключей с английского на русский
+        eng_dict (dict[str, str]): Словарь для перевода ключей с русского на английский
+        filters_dict (dict[str, () -> bool]): Словарь фильтров
+    """
     header = ['Навыки', 'Оклад', 'Дата публикации вакансии', 'Опыт работы', 'Премиум-вакансия',
               'Идентификатор валюты оклада', 'Название', 'Название региона', 'Компания']
 
@@ -185,6 +296,9 @@ class InputConnect:
     }
 
     def __init__(self):
+        """Инициализирует объект InputConnect, валидирует введенные данные и запускает программу.
+
+        """
         self.file = input('Введите название файла: ')
         self._filter = input('Введите параметр фильтрации: ')
         self._sort = input('Введите параметр сортировки: ')
@@ -196,21 +310,31 @@ class InputConnect:
 
         data = DataSet(self.file)
         data.get_data(data.read_csv())
-        self.print_table(data.vacancies_objects, self.rus_dict, self.keys_dict)
+        self.print_table(data.vacancies_objects, self.rus_dict)
 
     def validate(self):
+        """Запускает функции валидации для каждой перменной.
+
+        """
         self.validate_segment()
         self.validate_filter()
         self.validate_sort()
         self.validate_reverse()
 
     def validate_segment(self):
+        """Валидирует введенный диапазон, преобразуя его из строки в список list[int].
+
+        """
         result = []
         if len(self.segment) > 0:
             result = [int(i) for i in self.segment.split(' ')]
         self.segment = result
 
     def validate_filter(self):
+        """Валидирует введенный параметр фильрации, преобразуя его из строки в список list[str].
+        Если параметр не был введен, то _filter = True.
+
+        """
         if len(self._filter) == 0:
             self._filter = True
             return
@@ -224,6 +348,9 @@ class InputConnect:
         self._filter = result
 
     def validate_sort(self):
+        """Валидирует введенный параметр сортировки. Если параметр не был введен, то _sort = True.
+
+        """
         if len(self._sort) == 0:
             self._sort = True
             return
@@ -232,6 +359,9 @@ class InputConnect:
             exit()
 
     def validate_reverse(self):
+        """Валидирует введенный параметр обратной сортировки. Преобразует строку в булеан, по умолчанию - False.
+
+        """
         if len(self.is_reverse) == 0:
             self.is_reverse = False
             return
@@ -245,7 +375,14 @@ class InputConnect:
             print('Порядок сортировки задан некорректно')
             exit()
 
-    def print_table(self, data_vacancies, dic_naming, keys):
+    def print_table(self, data_vacancies, dic_naming):
+        """Метод для печати таблицы. Перед печатью, данные сортируются и фильтруются. Далее выводится таблица
+        с необходимым диапазоном и выбранными столбцами.
+
+        Args:
+            data_vacancies (list[Vacancy]): Cписок всех вакансий
+            dic_naming (dict[str, str]): Словарь с заголовками столбцов
+        """
         table = prettytable.PrettyTable()
         table.hrules = prettytable.ALL
         table.align = 'l'
@@ -262,10 +399,18 @@ class InputConnect:
         if len(self.fields) == 0:
             self.fields = dic_naming.values()
         else:
-            self.fields = ('№, ' + self.fields).split(', ')
+            self.fields = ('№, ' + str(self.fields)).split(', ')
         print(table.get_string(fields=self.fields))
 
     def get_result(self, data_vacancies):
+        """Метод для получения всех необходимых рядов таблицы, учитывая диапазон.
+
+        Args:
+            data_vacancies (list[Vacancy]): Cписок всех вакансий
+
+        Returns:
+            list[list[int | str]]: Список всех необходимых рядов таблицы
+        """
         result = []
         length = len(self.segment)
         i = 0
@@ -278,12 +423,26 @@ class InputConnect:
         return result
 
     def filter_vacs(self, data_vacancies):
+        """Метод для фильтрации вакансий. Использует словарь - filters_dict.
+        Если параметр фильтрации не задан, возвращает исходный список.
+
+        Args:
+            data_vacancies (list[Vacancy]): Cписок всех вакансий
+
+        Returns:
+            list[Vacancy]: Список отфильтрованных вакансий
+        """
         if self._filter == True:
             return data_vacancies
         return list(
             filter(lambda vac: self.filters_dict[self._filter[0]](vac, self._filter[1]), data_vacancies))
 
     def do_sort(self, data_vacancies):
+        """Метод для сортировки вакансий. Если параметр сортировки не задан, список остается без изменений.
+
+        Args:
+            data_vacancies (list[]): Cписок всех вакансий
+        """
         if self._sort == True:
             return
         if self._sort == 'Дата публикации вакансии':
