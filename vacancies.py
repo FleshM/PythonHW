@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import prettytable
 import re
+import doctest
 
 
 def remove_html(string):
@@ -13,6 +14,11 @@ def remove_html(string):
 
     Returns:
         str: Строка без html тегов
+
+    >>> remove_html("<p> </p> <p><strong>Вам предстоит:</strong></p> <ul> <li>Работать в составе команды")
+    'Вам предстоит: Работать в составе команды'
+    >>> remove_html("<p>")
+    ''
     """
     result = re.sub(r'<.*?>', '', string)
     result = re.sub(r'\s+', ' ', result)
@@ -27,6 +33,11 @@ def shortener(string):
 
     Returns:
         str: Строка (до 100 символов)
+
+    >>> shortener("«Самокат» — это технологическая компания и один из самых быстро растущих проектов в России. Мы меняе")
+    '«Самокат» — это технологическая компания и один из самых быстро растущих проектов в России. Мы меняе'
+    >>> shortener("«Самокат» — это технологическая компания и один из самых быстро растущих проектов в России. Мы меняем")
+    '«Самокат» — это технологическая компания и один из самых быстро растущих проектов в России. Мы меняе...'
     """
     return string if len(string) <= 100 else string[:100] + '...'
 
@@ -80,6 +91,19 @@ class Salary:
 
         Args:
             vac (dict): Вакансия в виде словаря
+
+        >>> Salary({'salary_from': '1', 'salary_to': '10', 'salary_gross': True, 'salary_currency': "RUR"})
+        Traceback (most recent call last):
+            ...
+        KeyError: True
+        >>> Salary({'salary_from': 'ABC', 'salary_to': '10', 'salary_gross': 'True', 'salary_currency': "BYR"})
+        Traceback (most recent call last):
+            ...
+        ValueError: could not convert string to float: 'ABC'
+        >>> Salary({'salary_from': '1', 'salary_to': 10, 'salary_gross': 'True', 'salary_currency': 1})
+        Traceback (most recent call last):
+            ...
+        KeyError: 1
         """
         self.salary_from = int(float(vac['salary_from']))
         self.salary_to = int(float(vac['salary_to']))
@@ -92,6 +116,14 @@ class Salary:
 
         Returns:
             float: Средняя зарплата в рублях
+        >>> Salary({'salary_from': '1', 'salary_to': 10, 'salary_gross': 'True', 'salary_currency': "BYR"}).get_average()
+        131.505
+        >>> Salary({'salary_from': 200, 'salary_to': '200', 'salary_gross': 'True', 'salary_currency': "RUR"}).get_average()
+        200.0
+        >>> Salary({'salary_from': '200', 'salary_to': '200', 'salary_gross': 'True', 'salary_currency': "рубли"}).get_average()
+        Traceback (most recent call last):
+            ...
+        KeyError: 'рубли'
         """
         return (float(self.salary_from) + float(self.salary_to)) / 2 * self.currency_to_rub[self.salary_currency]
 
@@ -100,6 +132,15 @@ class Salary:
 
         Returns:
             str: Оклад
+
+        >>> Salary({'salary_from': '1', 'salary_to': 10, 'salary_gross': 'False', 'salary_currency': "BYR"}).get_salary()
+        '1 - 10 (Белорусские рубли) (С вычетом налогов)'
+        >>> Salary({'salary_from': 200, 'salary_to': '200', 'salary_gross': 'True', 'salary_currency': "RUR"}).get_salary()
+        '200 - 200 (Рубли) (Без вычета налогов)'
+        >>> Salary({'salary_from': '200', 'salary_to': '200', 'salary_gross': 'True', 'salary_currency': "рубли"}).get_salary()
+        Traceback (most recent call last):
+            ...
+        KeyError: 'рубли'
         """
         return '{0:,} - {1:,} ({2}) ({3})'.format(self.salary_from, self.salary_to,
                                                   Salary.currencies[self.salary_currency],
@@ -142,6 +183,23 @@ class Vacancy:
 
         Args:
             vac (dict): Вакансия в виде словаря
+
+        >>> Vacancy({'name': 'Программист', 'description': '<p> </p> <p><strong>Вам предстоит:</strong></p> <ul> <li>:', 'key_skills': "Программирование", 'experience_id': 'noExperience', 'premium': 'True', 'employer_name': "URFU", 'salary_from': 100, 'salary_to': '200', 'salary_gross': 'True', 'salary_currency': "RUR", 'area_name': 'Ekat', 'published_at': "2022-06-21T17:33:46+0300"}).skills
+        ['Программирование']
+        >>> Vacancy({'name': 'Программист', 'description': '<p> </p> <p><strong>Вам предстоит:</strong></p> <ul> <li>:', 'key_skills': "Программирование", 'experience_id': 'noExperience', 'premium': 'True', 'employer_name': "URFU", 'salary_from': 100, 'salary_to': '200', 'salary_gross': 'True', 'salary_currency': "RUR", 'area_name': 'Ekat', 'published_at': "2022-06-21T17:33:46+0300"}).key_skills
+        'Программирование'
+        >>> Vacancy({'name': 'Программист', 'description': '<p> </p> <p><strong>Вам предстоит:</strong></p> <ul> <li>:', 'key_skills': "Программирование", 'experience_id': 'noExperience', 'premium': 'True', 'employer_name': "URFU", 'salary_from': 100, 'salary_to': '200', 'salary_gross': 'True', 'salary_currency': "RUR", 'area_name': 'Ekat', 'published_at': "2022-06-21T17:33:46+0300"}).experience_id
+        'Нет опыта'
+        >>> Vacancy({'name': 'Программист', 'description': '<p> </p> <p><strong>Вам предстоит:</strong></p> <ul> <li>:', 'key_skills': "Программирование", 'experience_id': 'noExperience', 'premium': 'True', 'employer_name': "URFU", 'salary_from': 100, 'salary_to': '200', 'salary_gross': 'True', 'salary_currency': "RUR", 'area_name': 'Ekat', 'published_at': "2022-06-21T17:33:46+0300"}).premium
+        'Да'
+        >>> type(Vacancy({'name': 'Программист', 'description': '<p> </p> <p><strong>Вам предстоит:</strong></p> <ul> <li>:', 'key_skills': "Программирование", 'experience_id': 'noExperience', 'premium': 'True', 'employer_name': "URFU", 'salary_from': 100, 'salary_to': '200', 'salary_gross': 'True', 'salary_currency': "RUR", 'area_name': 'Ekat', 'published_at': "2022-06-21T17:33:46+0300"}).salary).__name__
+        'Salary'
+        >>> Vacancy({'name': 'Программист', 'description': '<p> </p> <p><strong>Вам предстоит:</strong></p> <ul> <li>:', 'key_skills': "Программирование", 'experience_id': 'noExperience', 'premium': 'True', 'employer_name': "URFU", 'salary_from': 100, 'salary_to': '200', 'salary_gross': 'True', 'salary_currency': "RUR", 'area_name': 'Ekat', 'published_at': "2022-06-21T17:33:46+0300"}).date
+        '21.06.2022'
+        >>> Vacancy({'salary_from': '1', 'salary_to': '10', 'salary_gross': True, 'salary_currency': "RUR"})
+        Traceback (most recent call last):
+            ...
+        KeyError: 'name'
         """
         self.name = remove_html(vac['name'])
         self.description = shortener(remove_html(vac['description']))
@@ -177,6 +235,12 @@ class DataSet:
 
         Args:
             data_vacancies (list[dict]): Список со всеми вакансиями в виде словарей
+        >>> data = DataSet('file')
+        >>> data.get_data([{'name': 'Программист', 'description': '<p> </p> <p><strong>Вам предстоит:</strong></p> <ul> <li>:', 'key_skills': "Программирование", 'experience_id': 'noExperience', 'premium': 'True', 'employer_name': "URFU", 'salary_from': 100, 'salary_to': '200', 'salary_gross': 'True', 'salary_currency': "RUR", 'area_name': 'Ekat', 'published_at': "2022-06-21T17:33:46+0300"}])
+        >>> type(data.vacancies_objects[0]).__name__
+        'Vacancy'
+        >>> data.vacancies_objects[0].name
+        'Программист'
         """
         for vac in data_vacancies:
             self.vacancies_objects.append(Vacancy(vac))
@@ -208,6 +272,15 @@ class DataSet:
 
         Returns:
             list[dict]: Список словарей
+
+        >>> DataSet('test1.csv').read_csv()
+        [{'name': 'Web-программист', 'description': '<p>NEW! Web-программист(без опыта и с опытом)</p> <p> </p> <p><strong>Обязанности</strong>:</p> <p>- верстка сайтов на основе готовых макетов PHP, HTML и CSS</p> <p>- подключение собственной системы управления(обучение)</p> <p>- развитие собственного движка и системы управления</p> <p>- установка движка организации на проектах (обучение)</p> <p><br /><strong>Требования:</strong></p> <ul> <li>PHP7.4+ (знания ООП и паттернов проектирования) MySQL(MariaDB,PostgresQL)</li> <li>CSS(LESS,SASS)</li> <li>JS(TypeScript,NodeJS)</li> <li>знание основ Figma / Photoshop(для верстки с макетов из PSD)</li> <li>остальное при собеседовании.</li> </ul> <p><br /><strong>Условия:</strong></p> <p>- работа с офисе на Московское шоссе (удаленка после испытательного срока)</p> <p>- 5 дней с 9-00 до 18-00 (после вхождения в работу график может быть плавающим)</p> <p>- чай кофе печеньки</p> <p>- дружный коллектив</p> <p>- отпуск ежегодный оплачиваемый</p> <p> </p> <p><strong>В целом рассматриваем как с опытом работы так и без опыта. Если человек готов учиться и развиваться, он предан и любит программировать и верстать сайты мы его научим и подготовим за счет компании.</strong></p> <p> </p> <p>Испытательный срок от 2 до 4 недель(при собеседовании)</p> <p>Зарплата 2 раза в месяц: аванс и оклад.</p> <p><strong>Оклад фиксированный</strong> + <strong>% от объема</strong> выполненных задач за месяц.</p>', 'key_skills': 'Разработка ПО', 'experience_id': 'noExperience', 'premium': 'False', 'employer_name': 'Асташенков Г. А.', 'salary_from': '30000.0', 'salary_to': '80000.0', 'salary_gross': 'False', 'salary_currency': 'RUR', 'area_name': 'Ульяновск', 'published_at': '2022-05-31T17:32:31+0300'}]
+        >>> DataSet('test99.csv').read_csv()
+        Traceback (most recent call last):
+            ...
+        FileNotFoundError: [WinError 2] Не удается найти указанный файл: 'test99.csv'
+        >>> DataSet('test2.csv').read_csv()
+        []
         """
         head, result = [], []
         if os.stat(self.file_name).st_size == 0:
