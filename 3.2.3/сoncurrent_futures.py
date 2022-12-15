@@ -66,6 +66,15 @@ def read_csv(file_name):
 
 
 def get_year_stats(file_name, p_name):
+    """Читает csv файл и формирует все (4) статистки за год.
+
+    Args:
+        file_name(str): Название файла
+        p_name(str): Название профессии
+
+    Returns:
+        list: Список, содержащий год и всю статистку по нему
+    """
     year = int(file_name[4:8])
     salary_by_year = 0
     vacancies_by_year = 0
@@ -88,6 +97,14 @@ def get_year_stats(file_name, p_name):
 
 
 def get_multi_stats(p_name):
+    """Создает отдельные процессы для каждого csv-файла и возвращает статистику по всем годам.
+
+    Args:
+        p_name(str): Название профессии
+
+    Returns:
+        list: Список, содержащий статистку по всем годам
+    """
     csv_directory = os.listdir("csv")
     files_count = len([f for f in csv_directory])
     with concurrent.futures.ProcessPoolExecutor(max_workers=files_count) as executor:
@@ -105,6 +122,14 @@ def get_multi_stats(p_name):
 
 
 def get_cities_stats(file_name):
+    """Получает статистику по городам, не используя многопроцессорную обработку.
+
+    Args:
+        file_name(str): Название файла
+
+    Returns:
+        list: Список, содержащий статистку по городам
+    """
     salary_by_city = {}
     vacancies_by_city = {}
     data_vacancies = read_csv(file_name)
