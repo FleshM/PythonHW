@@ -11,4 +11,3 @@
 ## Concurrent futures – 3,6 сек
 
 ![con_ftrs](https://user-images.githubusercontent.com/103964689/207874935-a248c5f8-d587-4237-a8e7-573fb033babc.png)
-
