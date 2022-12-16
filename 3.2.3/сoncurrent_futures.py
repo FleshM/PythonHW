@@ -170,8 +170,8 @@ def get_cities_stats(file_name):
 
 
 if __name__ == "__main__":
-    file = 'vacancies_by_year.csv'
-    name = 'Программист'
+    file = input('Введите название файла: ')
+    name = input('Введите название профессии: ')
     csv_divider(file)
     year_stats = get_multi_stats(name)
     cities_stats = get_cities_stats(file)
