@@ -16,7 +16,7 @@ if 'BYR' in cur_codes:
 
 dates = []
 for year in range(int(first_date[0]), int(last_date[0]) + 1):
-    for month in range(int(first_date[1]) if year == int(first_date[0]) else 1, int(last_date[1]) if year == int(last_date[0]) else 13):
+    for month in range(int(first_date[1]) if year == int(first_date[0]) else 1, int(last_date[1]) + 1 if year == int(last_date[0]) else 13):
         dates.append(f"{f'0{month}' if month in range(1, 10) else month}/{year}")
 
 
