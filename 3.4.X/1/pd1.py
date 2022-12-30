@@ -2,6 +2,16 @@ import pandas as pd
 
 
 def format_salary(date, salary_from, salary_to, currency):
+    """Считает зарплату вакансии в рублях, если известна хотя бы одна граница вилки оклада.
+
+        Args:
+            date(list[str]): Дата [год, месяц]
+            salary_from(float): Нижняя граница вилки оклада
+            salary_to(float): Верхняя граница вилки оклада
+            currency(str): Валюта
+        Returns:
+            float: Средний оклад
+    """
     exchange_rate = 1 if currency == 'RUR' else 0
     if currency in currencies:
         date = f"{date[1]}/{date[0]}"
@@ -16,7 +26,7 @@ currency_dates = pd.read_csv("currencies.csv")
 currencies = list(currency_dates.columns)[1:len(list(currency_dates.columns))]
 salary = []
 for index, row in df.iterrows():
-    salary.append(format_salary(row["published_at"][0:7].split("-"),row["salary_from"],
+    salary.append(format_salary(row["published_at"][0:7].split("-"), row["salary_from"],
                                 row["salary_to"], row["salary_currency"]))
 
 df.insert(1, 'salary', salary)
